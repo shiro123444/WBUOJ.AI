@@ -1,0 +1,678 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model admin_logs {
+  id                               String   @id
+  admin_id                         String
+  action                           String
+  target_type                      String
+  target_id                        String?
+  user_id                          String?
+  details                          String?
+  ip_address                       String?
+  user_agent                       String?
+  created_at                       DateTime @default(now())
+  users_admin_logs_admin_idTousers users    @relation("admin_logs_admin_idTousers", fields: [admin_id], references: [id])
+  users_admin_logs_user_idTousers  users?   @relation("admin_logs_user_idTousers", fields: [user_id], references: [id])
+
+  @@index([action])
+  @@index([admin_id])
+  @@index([created_at])
+  @@index([user_id])
+}
+
+model ai_conversations {
+  id            String          @id
+  user_id       String
+  title         String
+  problem_id    String?
+  created_at    DateTime        @default(now())
+  updated_at    DateTime
+  problems      problems?       @relation(fields: [problem_id], references: [id])
+  users         users           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  ai_messages   ai_messages[]
+  ai_usage_logs ai_usage_logs[]
+
+  @@index([user_id, updated_at])
+}
+
+model ai_messages {
+  id               String           @id
+  conversation_id  String
+  role             AIMessageRole
+  content          String
+  images           String[]
+  code_context     String?
+  created_at       DateTime         @default(now())
+  ai_conversations ai_conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id, created_at])
+}
+
+model ai_models {
+  id             String         @id
+  name           String         @unique
+  provider       AIProvider
+  capabilities   AICapability[]
+  max_tokens     Int
+  cost_per_token Float
+  enabled        Boolean        @default(true)
+  created_at     DateTime       @default(now())
+}
+
+model ai_quotas {
+  id                 String @id
+  user_id            String
+  date               String
+  chat_used          Int    @default(0)
+  chat_limit         Int    @default(50)
+  inline_completions Int    @default(0)
+
+  @@unique([user_id, date])
+}
+
+model ai_usage_logs {
+  id               String            @id
+  user_id          String
+  type             AIUsageType
+  problem_id       String?
+  conversation_id  String?
+  tokens_used      Int               @default(0)
+  created_at       DateTime          @default(now())
+  ai_conversations ai_conversations? @relation(fields: [conversation_id], references: [id])
+  users            users             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at])
+}
+
+model announcement_reads {
+  id              String        @id
+  announcement_id String
+  user_id         String
+  read_at         DateTime      @default(now())
+  announcements   announcements @relation(fields: [announcement_id], references: [id], onDelete: Cascade)
+  users           users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([announcement_id, user_id])
+  @@index([user_id])
+}
+
+model announcements {
+  id                 String               @id
+  title              String
+  content            String
+  content_json       String?
+  priority           AnnouncementPriority @default(NORMAL)
+  publish_at         DateTime?
+  expires_at         DateTime?
+  is_published       Boolean              @default(false)
+  is_pinned          Boolean              @default(false)
+  target_audience    AnnouncementAudience @default(ALL)
+  created_at         DateTime             @default(now())
+  updated_at         DateTime
+  created_by         String
+  announcement_reads announcement_reads[]
+  users              users                @relation(fields: [created_by], references: [id])
+
+  @@index([created_at])
+  @@index([is_published, publish_at])
+  @@index([priority])
+}
+
+model badges {
+  id          String        @id
+  name        String        @unique
+  description String
+  icon        String
+  condition   String
+  created_at  DateTime      @default(now())
+  user_badges user_badges[]
+}
+
+model check_ins {
+  id                String   @id
+  user_id           String
+  date              String
+  streak            Int
+  xp_gained         Int
+  points_gained     Int
+  milestone_reached Int?
+  created_at        DateTime @default(now())
+  users             users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, date])
+  @@index([user_id, date])
+}
+
+model comment_likes {
+  id         String   @id
+  comment_id String
+  user_id    String
+  created_at DateTime @default(now())
+  comments   comments @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([comment_id, user_id])
+}
+
+model comments {
+  id            String          @id
+  solution_id   String
+  author_id     String
+  content       String
+  likes         Int             @default(0)
+  created_at    DateTime        @default(now())
+  comment_likes comment_likes[]
+  users         users           @relation(fields: [author_id], references: [id])
+  solutions     solutions       @relation(fields: [solution_id], references: [id], onDelete: Cascade)
+}
+
+model contest_entries {
+  id                  String                @id
+  contest_id          String
+  user_id             String
+  total_score         Int                   @default(0)
+  rank                Int?
+  joined_at           DateTime              @default(now())
+  contests            contests              @relation(fields: [contest_id], references: [id], onDelete: Cascade)
+  users               users                 @relation(fields: [user_id], references: [id])
+  contest_submissions contest_submissions[]
+
+  @@unique([contest_id, user_id])
+}
+
+model contest_problems {
+  id         String   @id
+  contest_id String
+  problem_id String
+  label      String
+  score      Int      @default(100)
+  contests   contests @relation(fields: [contest_id], references: [id], onDelete: Cascade)
+  problems   problems @relation(fields: [problem_id], references: [id])
+
+  @@unique([contest_id, label])
+  @@unique([contest_id, problem_id])
+}
+
+model contest_submissions {
+  id              String          @id
+  entry_id        String
+  submission_id   String          @unique
+  problem_label   String
+  score           Int             @default(0)
+  solved_at       DateTime?
+  attempts        Int             @default(1)
+  contest_entries contest_entries @relation(fields: [entry_id], references: [id], onDelete: Cascade)
+  submissions     submissions     @relation(fields: [submission_id], references: [id])
+}
+
+model contests {
+  id               String             @id
+  title            String
+  description      String
+  start_time       DateTime
+  end_time         DateTime
+  max_participants Int?
+  status           ContestStatus      @default(UPCOMING)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime
+  created_by_id    String
+  contest_entries  contest_entries[]
+  contest_problems contest_problems[]
+  users            users              @relation(fields: [created_by_id], references: [id])
+}
+
+model discussions {
+  id               String    @id
+  problem_id       String
+  author_id        String
+  title            String
+  content          String
+  content_json     String?
+  content_markdown String?
+  views            Int       @default(0)
+  likes            Int       @default(0)
+  dislikes         Int       @default(0)
+  reply_count      Int       @default(0)
+  is_pinned        Boolean   @default(false)
+  is_locked        Boolean   @default(false)
+  tags             String[]
+  created_at       DateTime  @default(now())
+  updated_at       DateTime
+  users            users     @relation(fields: [author_id], references: [id])
+  problems         problems  @relation(fields: [problem_id], references: [id], onDelete: Cascade)
+  replies          replies[]
+
+  @@index([author_id])
+  @@index([created_at])
+  @@index([problem_id])
+}
+
+model email_verifications {
+  id         String   @id
+  user_id    String
+  email      String
+  token      String   @unique
+  expires_at DateTime
+  verified   Boolean  @default(false)
+  created_at DateTime @default(now())
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([expires_at])
+  @@index([token])
+  @@index([user_id])
+}
+
+model examples {
+  id          String   @id
+  problem_id  String
+  input       String
+  output      String
+  explanation String?
+  order       Int      @default(0)
+  problems    problems @relation(fields: [problem_id], references: [id], onDelete: Cascade)
+}
+
+model level_history {
+  id         String   @id
+  user_id    String
+  from_level Int
+  to_level   Int
+  xp_gained  Int
+  source     String
+  created_at DateTime @default(now())
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at])
+}
+
+model login_history {
+  id         String   @id
+  user_id    String
+  ip         String
+  user_agent String
+  location   String?
+  success    Boolean  @default(true)
+  created_at DateTime @default(now())
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([ip])
+  @@index([user_id, created_at])
+}
+
+model operation_logs {
+  id          String   @id
+  user_id     String?
+  action      String
+  target_type String
+  target_id   String?
+  details     String?
+  ip_address  String?
+  user_agent  String?
+  created_at  DateTime @default(now())
+  users       users?   @relation(fields: [user_id], references: [id])
+
+  @@index([action])
+  @@index([created_at])
+  @@index([user_id])
+}
+
+model points_history {
+  id          String    @id
+  user_id     String
+  type        PointType
+  amount      Int
+  source      String
+  description String
+  created_at  DateTime  @default(now())
+  users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([type])
+  @@index([user_id, created_at])
+}
+
+model problem_tags {
+  id         String   @id
+  problem_id String
+  tag        String
+  problems   problems @relation(fields: [problem_id], references: [id], onDelete: Cascade)
+
+  @@unique([problem_id, tag])
+  @@index([tag])
+}
+
+model problems {
+  id               String             @id
+  number           Int                @unique @default(autoincrement())
+  title            String
+  description      String
+  input_format     String
+  output_format    String
+  constraints      String
+  difficulty       Difficulty
+  time_limit       Int                @default(1000)
+  memory_limit     Int                @default(256)
+  accepted_count   Int                @default(0)
+  submission_count Int                @default(0)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime
+  created_by_id    String
+  ai_conversations ai_conversations[]
+  contest_problems contest_problems[]
+  discussions      discussions[]
+  examples         examples[]
+  problem_tags     problem_tags[]
+  users            users              @relation(fields: [created_by_id], references: [id])
+  solutions        solutions[]
+  submissions      submissions[]
+  test_cases       test_cases[]
+}
+
+model reactions {
+  id          String         @id
+  target_type ReactionTarget
+  target_id   String
+  user_id     String
+  type        ReactionType
+  created_at  DateTime       @default(now())
+  users       users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([target_type, target_id, user_id, type])
+  @@index([target_type, target_id])
+  @@index([user_id])
+}
+
+model replies {
+  id            String      @id
+  discussion_id String
+  author_id     String
+  parent_id     String?
+  depth         Int         @default(0)
+  content       String
+  content_json  String?
+  likes         Int         @default(0)
+  dislikes      Int         @default(0)
+  mentions      String[]
+  is_edited     Boolean     @default(false)
+  edited_at     DateTime?
+  created_at    DateTime    @default(now())
+  users         users       @relation(fields: [author_id], references: [id])
+  discussions   discussions @relation(fields: [discussion_id], references: [id], onDelete: Cascade)
+  replies       replies?    @relation("repliesToreplies", fields: [parent_id], references: [id], onDelete: Cascade)
+  other_replies replies[]   @relation("repliesToreplies")
+
+  @@index([author_id])
+  @@index([created_at])
+  @@index([discussion_id])
+  @@index([parent_id])
+}
+
+model solution_likes {
+  id          String    @id
+  solution_id String
+  user_id     String
+  created_at  DateTime  @default(now())
+  solutions   solutions @relation(fields: [solution_id], references: [id], onDelete: Cascade)
+  users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([solution_id, user_id])
+}
+
+model solutions {
+  id             String           @id
+  problem_id     String
+  author_id      String
+  title          String
+  content        String
+  code           String?
+  language       String?
+  likes          Int              @default(0)
+  views          Int              @default(0)
+  created_at     DateTime         @default(now())
+  updated_at     DateTime
+  comments       comments[]
+  solution_likes solution_likes[]
+  users          users            @relation(fields: [author_id], references: [id])
+  problems       problems         @relation(fields: [problem_id], references: [id])
+
+  @@index([author_id])
+  @@index([problem_id])
+}
+
+model submissions {
+  id                  String               @id
+  problem_id          String
+  user_id             String
+  code                String
+  language            SupportedLanguage
+  status              JudgeStatus          @default(PENDING)
+  time                Int?
+  memory              Int?
+  compile_error       String?
+  runtime_error       String?
+  created_at          DateTime             @default(now())
+  contest_submissions contest_submissions?
+  problems            problems             @relation(fields: [problem_id], references: [id])
+  users               users                @relation(fields: [user_id], references: [id])
+  test_case_results   test_case_results[]
+
+  @@index([status])
+  @@index([user_id, problem_id])
+}
+
+model system_configs {
+  id         String   @id
+  key        String   @unique
+  value      String
+  updated_at DateTime
+}
+
+model test_case_results {
+  id              String      @id
+  submission_id   String
+  test_case_num   Int
+  passed          Boolean
+  time            Int
+  memory          Int
+  input           String?
+  expected_output String?
+  actual_output   String?
+  submissions     submissions @relation(fields: [submission_id], references: [id], onDelete: Cascade)
+}
+
+model test_cases {
+  id              String   @id
+  problem_id      String
+  input           String
+  expected_output String
+  is_example      Boolean  @default(false)
+  order           Int      @default(0)
+  problems        problems @relation(fields: [problem_id], references: [id], onDelete: Cascade)
+}
+
+model user_badges {
+  id        String   @id
+  user_id   String
+  badge_id  String
+  earned_at DateTime @default(now())
+  badges    badges   @relation(fields: [badge_id], references: [id], onDelete: Cascade)
+  users     users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, badge_id])
+}
+
+model users {
+  id                                    String                @id
+  username                              String                @unique
+  email                                 String                @unique
+  password_hash                         String
+  avatar                                String?
+  bio                                   String?
+  role                                  UserRole              @default(STUDENT)
+  oauthProvider                         OAuthProvider?
+  oauth_id                              String?
+  github_id                             String?               @unique
+  github_access_token                   String?
+  github_refresh_token                  String?
+  level                                 Int                   @default(1)
+  xp                                    Int                   @default(0)
+  total_points                          Int                   @default(0)
+  solve_points                          Int                   @default(0)
+  active_points                         Int                   @default(0)
+  contribute_points                     Int                   @default(0)
+  current_streak                        Int                   @default(0)
+  max_streak                            Int                   @default(0)
+  total_check_ins                       Int                   @default(0)
+  last_check_in_date                    String?
+  email_verified                        Boolean               @default(false)
+  email_verified_at                     DateTime?
+  is_disabled                           Boolean               @default(false)
+  disabled_reason                       String?
+  disabled_at                           DateTime?
+  disabled_by                           String?
+  solved_count                          Int                   @default(0)
+  submission_count                      Int                   @default(0)
+  score                                 Int                   @default(0)
+  streak                                Int                   @default(0)
+  login_count                           Int                   @default(0)
+  locked_until                          DateTime?
+  login_attempts                        Int                   @default(0)
+  created_at                            DateTime              @default(now())
+  updated_at                            DateTime
+  last_login_at                         DateTime?
+  admin_logs_admin_logs_admin_idTousers admin_logs[]          @relation("admin_logs_admin_idTousers")
+  admin_logs_admin_logs_user_idTousers  admin_logs[]          @relation("admin_logs_user_idTousers")
+  ai_conversations                      ai_conversations[]
+  ai_usage_logs                         ai_usage_logs[]
+  announcement_reads                    announcement_reads[]
+  announcements                         announcements[]
+  check_ins                             check_ins[]
+  comment_likes                         comment_likes[]
+  comments                              comments[]
+  contest_entries                       contest_entries[]
+  contests                              contests[]
+  discussions                           discussions[]
+  email_verifications                   email_verifications[]
+  level_history                         level_history[]
+  login_history                         login_history[]
+  operation_logs                        operation_logs[]
+  points_history                        points_history[]
+  problems                              problems[]
+  reactions                             reactions[]
+  replies                               replies[]
+  solution_likes                        solution_likes[]
+  solutions                             solutions[]
+  submissions                           submissions[]
+  user_badges                           user_badges[]
+  users                                 users?                @relation("usersTousers", fields: [disabled_by], references: [id])
+  other_users                           users[]               @relation("usersTousers")
+}
+
+enum AICapability {
+  CHAT
+  COMPLETION
+  VISION
+  CODE_ANALYSIS
+}
+
+enum AIMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum AIProvider {
+  DEEPSEEK
+  OPENAI
+  ANTHROPIC
+  LOCAL
+}
+
+enum AIUsageType {
+  COMPLETE
+  HINT
+  EXPLAIN
+  ANALYZE
+  CHAT
+  DEBUG
+  SUGGEST_FILES
+  INLINE_COMPLETE
+}
+
+enum AnnouncementAudience {
+  ALL
+  STUDENTS
+  ADMINS
+}
+
+enum AnnouncementPriority {
+  NORMAL
+  IMPORTANT
+  URGENT
+}
+
+enum ContestStatus {
+  UPCOMING
+  RUNNING
+  ENDED
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum JudgeStatus {
+  PENDING
+  JUDGING
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT_EXCEEDED
+  MEMORY_LIMIT_EXCEEDED
+  RUNTIME_ERROR
+  COMPILE_ERROR
+}
+
+enum OAuthProvider {
+  GITHUB
+  WECHAT
+}
+
+enum PointType {
+  SOLVE
+  ACTIVE
+  CONTRIBUTE
+}
+
+enum ReactionTarget {
+  DISCUSSION
+  REPLY
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+  HEART
+  ROCKET
+  EYES
+}
+
+enum SupportedLanguage {
+  CPP
+  PYTHON
+  JAVA
+  JAVASCRIPT
+  GO
+}
+
+enum UserRole {
+  STUDENT
+  ADMIN
+}

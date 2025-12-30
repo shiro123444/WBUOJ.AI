@@ -1,0 +1,26 @@
+[Unit]
+Description=Hydro Judge Service
+After=network.target
+
+[Service]
+Type=simple
+User=judge
+WorkingDirectory=/tmp/hydrojudge
+ExecStart=/usr/bin/hydrojudge
+Restart=always
+RestartSec=10
+
+# 环境变量
+Environment=NODE_ENV=production
+
+# 资源限制
+LimitNOFILE=65535
+LimitNPROC=65535
+
+# 日志
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hydrojudge
+
+[Install]
+WantedBy=multi-user.target

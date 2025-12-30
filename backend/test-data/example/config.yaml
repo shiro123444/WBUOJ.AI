@@ -1,0 +1,31 @@
+# Hydro Judge 题目配置文件示例
+# 文件名: config.yaml
+
+# 题目类型
+type: default
+
+# 时间限制 (ms)
+time: 1000ms
+
+# 内存限制
+memory: 256m
+
+# 测试用例配置
+cases:
+  - input: 1.in
+    output: 1.out
+    score: 50
+  - input: 2.in
+    output: 2.out
+    score: 50
+
+# 子任务配置 (可选)
+# subtasks:
+#   - score: 30
+#     cases: [1, 2]
+#   - score: 70
+#     cases: [3, 4, 5]
+
+# 特殊评测器 (可选)
+# checker_type: default  # default | testlib | lemon | hustoj | qduoj
+# checker: checker.cpp   # 自定义评测器文件

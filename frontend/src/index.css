@@ -1,0 +1,512 @@
+@import "tailwindcss";
+@plugin './hero.ts';
+@source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+
+/* Tailwind v4 dark mode configuration */
+@custom-variant dark (&:is(.dark *));
+
+/* Custom CSS variables for theming */
+:root {
+  --color-primary: #3b82f6;
+  --color-primary-dark: #2563eb;
+  --color-secondary: #6b7280;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-background: #ffffff;
+  --color-surface: #f9fafb;
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+}
+
+.dark {
+  --color-background: #111827;
+  --color-surface: #1f2937;
+  --color-text: #f9fafb;
+  --color-text-secondary: #9ca3af;
+}
+
+/* ============================================
+   Editor Enhancement - Animations & Responsive
+   ============================================ */
+
+/* Select dropdown styling for dark mode */
+select option {
+  background-color: #374151;
+  color: #f9fafb;
+  padding: 8px 12px;
+}
+
+select:focus option:checked {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* Firefox specific select styling */
+@-moz-document url-prefix() {
+  select option {
+    background-color: #374151;
+    color: #f9fafb;
+  }
+}
+
+/* Dropdown animation */
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dropdown-in {
+  animation: dropdown-in 0.15s ease-out forwards;
+}
+
+/* Theme transition - smooth color changes */
+.theme-transition,
+.theme-transition * {
+  transition: background-color 0.3s ease, 
+              border-color 0.3s ease, 
+              color 0.2s ease !important;
+}
+
+/* AI completion suggestion fade-in */
+@keyframes ai-suggestion-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.6;
+  }
+}
+
+.ai-suggestion-fade-in {
+  animation: ai-suggestion-fade-in 0.2s ease-out forwards;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom breakpoint for extra small screens */
+@media (min-width: 480px) {
+  .xs\:inline {
+    display: inline !important;
+  }
+  .xs\:hidden {
+    display: none !important;
+  }
+}
+
+/* Modal backdrop blur enhancement */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Button press effect */
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Smooth focus ring */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Editor background image container */
+.editor-bg-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.editor-bg-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.editor-bg-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+/* Monaco editor theme transition */
+.monaco-editor {
+  transition: background-color 0.3s ease !important;
+}
+
+.monaco-editor .margin,
+.monaco-editor .monaco-editor-background {
+  transition: background-color 0.3s ease !important;
+}
+
+/* AI inline completion ghost text styling */
+.monaco-editor .ghost-text-decoration {
+  opacity: 0;
+  animation: ai-suggestion-fade-in 0.2s ease-out forwards;
+}
+
+.monaco-editor .ghost-text-decoration-preview {
+  opacity: 0;
+  animation: ai-suggestion-fade-in 0.2s ease-out forwards;
+}
+
+/* Inline suggest widget animation */
+.monaco-editor .inlineSuggestWidget {
+  animation: ai-suggestion-fade-in 0.15s ease-out forwards;
+}
+
+/* Responsive editor toolbar */
+@media (max-width: 640px) {
+  .editor-toolbar-compact .language-selector {
+    max-width: 100px;
+  }
+  
+  .editor-toolbar-compact .language-selector select {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Settings panel mobile optimization */
+@media (max-width: 640px) {
+  .settings-panel-mobile {
+    border-radius: 0.75rem 0.75rem 0 0;
+    max-height: 85vh;
+    margin-top: auto;
+  }
+}
+
+/* Pulse animation for AI indicator */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Slide up animation for mobile panels */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Fade scale animation for modals */
+@keyframes fade-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-scale-in {
+  animation: fade-scale-in 0.2s ease-out forwards;
+}
+
+/* ============================================
+   End Editor Enhancement Styles
+   ============================================ */
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Prose styles for markdown rendering */
+.prose {
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.prose p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  color: var(--color-text);
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.prose h1 { font-size: 1.5em; }
+.prose h2 { font-size: 1.25em; }
+.prose h3 { font-size: 1.125em; }
+
+.prose code {
+  background-color: #f3f4f6;
+  padding: 0.125em 0.25em;
+  border-radius: 0.25em;
+  font-size: 0.875em;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+}
+
+.dark .prose code {
+  background-color: #374151;
+}
+
+.prose pre {
+  background-color: #1f2937;
+  color: #e5e7eb;
+  padding: 1em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+  font-size: 0.875em;
+}
+
+.prose ul, .prose ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.prose li {
+  margin: 0.2em 0;
+}
+
+.prose ul {
+  list-style-type: disc;
+}
+
+.prose ol {
+  list-style-type: decimal;
+}
+
+.prose blockquote {
+  border-left: 4px solid #3b82f6;
+  padding-left: 1em;
+  margin: 0.75em 0;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75em 0;
+}
+
+.prose th, .prose td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.dark .prose th, .dark .prose td {
+  border-color: #374151;
+}
+
+.prose th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.dark .prose th {
+  background-color: #1f2937;
+}
+
+.prose a {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  color: #2563eb;
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1em 0;
+}
+
+.dark .prose hr {
+  border-color: #374151;
+}
+
+/* Syntax highlighting for code blocks */
+.hljs {
+  background: transparent !important;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-link {
+  color: #c678dd;
+}
+
+.hljs-string,
+.hljs-title,
+.hljs-name,
+.hljs-type,
+.hljs-attribute,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition,
+.hljs-variable,
+.hljs-template-tag,
+.hljs-template-variable {
+  color: #98c379;
+}
+
+.hljs-comment,
+.hljs-quote,
+.hljs-deletion,
+.hljs-meta {
+  color: #5c6370;
+}
+
+.hljs-number,
+.hljs-regexp,
+.hljs-literal,
+.hljs-link {
+  color: #d19a66;
+}
+
+.hljs-built_in,
+.hljs-builtin-name {
+  color: #e6c07b;
+}
+
+.hljs-function .hljs-keyword {
+  color: #c678dd;
+}
+
+.hljs-class .hljs-title {
+  color: #e6c07b;
+}
+/* KaTeX math rendering styles */
+.katex {
+  font-size: 1.05em;
+}
+
+.katex-display {
+  margin: 0.75em 0;
+  text-align: center;
+}
+
+/* Dark mode support for KaTeX */
+.dark .katex {
+  color: #e5e7eb;
+}
+
+.dark .katex .base {
+  color: #e5e7eb;
+}
+
+.dark .katex .mord {
+  color: #e5e7eb;
+}
+
+.dark .katex .mop {
+  color: #60a5fa;
+}
+
+.dark .katex .mbin {
+  color: #fbbf24;
+}
+
+.dark .katex .mrel {
+  color: #34d399;
+}
+
+.dark .katex .mpunct {
+  color: #e5e7eb;
+}
+
+.dark .katex .mopen,
+.dark .katex .mclose {
+  color: #f87171;
+}
+
+.dark .katex .accent-body {
+  color: #e5e7eb;
+}
+
+/* Math block styling */
+.prose .katex-display {
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.dark .prose .katex-display {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Inline math styling */
+.prose .katex {
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 0.1rem 0.2rem;
+  border-radius: 0.25rem;
+}
+
+.dark .prose .katex {
+  background-color: rgba(255, 255, 255, 0.03);
+}

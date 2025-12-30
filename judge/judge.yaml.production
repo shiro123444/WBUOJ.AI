@@ -1,0 +1,33 @@
+# Hydro Judge 生产环境配置文件
+# 复制此文件到 ~/.hydro/judge.yaml
+
+# 评测机配置
+hosts:
+  main:
+    type: hydro
+    # 后端服务地址
+    server_url: http://localhost:3000/
+    # 评测机用户名
+    uname: judge
+    # 评测机密钥 (与后端 JUDGE_SECRET 一致)
+    password: dev-judge-secret-key
+    # 结果详细程度
+    detail: full
+    # 并发评测数量
+    concurrency: 2
+
+# 沙箱配置
+sandbox_host: http://localhost:5050
+
+# 资源限制
+tmpfs_size: 512m
+stdio_size: 256m
+memory_max: 1024m
+process_limit: 64
+testcases_max: 100
+
+# 缓存配置
+cache_dir: /tmp/hydrojudge/cache
+
+# 日志配置
+log_level: info

@@ -1,0 +1,70 @@
+# Go-Judge Mount Configuration
+# 沙箱环境的文件系统挂载配置
+
+mount:
+  # 系统目录 (只读)
+  - type: bind
+    source: /bin
+    target: /bin
+    readonly: true
+  - type: bind
+    source: /lib
+    target: /lib
+    readonly: true
+  - type: bind
+    source: /lib64
+    target: /lib64
+    readonly: true
+  - type: bind
+    source: /usr
+    target: /usr
+    readonly: true
+  - type: bind
+    source: /etc/ld.so.cache
+    target: /etc/ld.so.cache
+    readonly: true
+  - type: bind
+    source: /etc/alternatives
+    target: /etc/alternatives
+    readonly: true
+  # 设备文件
+  - type: bind
+    source: /dev/null
+    target: /dev/null
+  - type: bind
+    source: /dev/urandom
+    target: /dev/urandom
+  - type: bind
+    source: /dev/random
+    target: /dev/random
+  - type: bind
+    source: /dev/zero
+    target: /dev/zero
+  - type: bind
+    source: /dev/full
+    target: /dev/full
+  # 临时目录 (读写)
+  - type: tmpfs
+    target: /tmp
+    data: size=128m,nr_inodes=4k
+  - type: tmpfs
+    target: /w
+    data: size=128m,nr_inodes=4k
+
+proc: true
+
+symLink:
+  - linkPath: /dev/fd
+    target: /proc/self/fd
+  - linkPath: /dev/stdin
+    target: /proc/self/fd/0
+  - linkPath: /dev/stdout
+    target: /proc/self/fd/1
+  - linkPath: /dev/stderr
+    target: /proc/self/fd/2
+
+workDir: /w
+hostName: go-judge
+domainName: go-judge
+uid: 1536
+gid: 1536

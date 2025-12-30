@@ -1,0 +1,43 @@
+# Hydro Judge 配置文件
+# 复制此文件到 ~/.hydro/judge.yaml 并修改配置
+
+# 评测机配置
+hosts:
+  # 主评测连接
+  main:
+    type: hydro
+    # 后端服务地址 (修改为实际地址)
+    server_url: http://localhost:3000/
+    # 评测机用户名
+    uname: judge
+    # 评测机密钥 (需要与后端配置一致)
+    password: your_judge_secret_key_here
+    # 结果详细程度: full | simple
+    detail: full
+    # 并发评测数量
+    concurrency: 2
+
+# 沙箱配置
+sandbox:
+  # tmpfs 大小 (MB)
+  tmpfs_size: 512
+  # 标准输入输出大小限制 (MB)
+  stdio_size: 256
+  # 最大内存限制 (MB)
+  memory_max: 1024
+  # 最大进程数
+  process_limit: 64
+  # 最大测试用例数
+  testcases_max: 100
+
+# 缓存配置
+cache:
+  # 测试数据缓存目录
+  dir: /tmp/hydrojudge/cache
+  # 缓存大小限制 (MB)
+  max_size: 2048
+
+# 日志配置
+log:
+  # 日志级别: debug | info | warn | error
+  level: info

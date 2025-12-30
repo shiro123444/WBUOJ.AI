@@ -1,0 +1,5 @@
+export { authController, AuthController } from './auth.controller.js'
+export { problemController, ProblemController } from './problem.controller.js'
+export * as judgeController from './judge.controller.js'
+export { submissionController, SubmissionController } from './submission.controller.js'
+export { solutionController, SolutionController } from './solution.controller.js'
