@@ -60,7 +60,17 @@ class ApiClient {
       headers,
     })
 
-    const data = await response.json() as ApiResponse<T>
+    let data: ApiResponse<T>
+    try {
+      const text = await response.text()
+      try {
+        data = JSON.parse(text)
+      } catch {
+        throw new Error(`API Error ${response.status} (${response.statusText}): ${text.slice(0, 100)}`)
+      }
+    } catch (e: any) {
+       throw new Error(e.message || 'Network error')
+    }
 
     if (!response.ok || !('success' in data) || !data.success) {
       const error = data as ApiError
@@ -88,7 +98,17 @@ class ApiClient {
       headers,
     })
 
-    const data = await response.json() as ApiResponse<T>
+    let data: ApiResponse<T>
+    try {
+      const text = await response.text()
+      try {
+        data = JSON.parse(text)
+      } catch {
+        throw new Error(`API Error ${response.status} (${response.statusText}): ${text.slice(0, 100)}`)
+      }
+    } catch (e: any) {
+       throw new Error(e.message || 'Network error')
+    }
 
     if (!response.ok || !('success' in data) || !data.success) {
       const error = data as ApiError

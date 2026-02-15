@@ -55,10 +55,13 @@ services:
 
   # Go-Judge Sandbox (for code execution)
   go-judge:
-    build:
-      context: ./judge
-      dockerfile: Dockerfile
-    image: ai-club-oj-judge:latest
+    # build:
+    #   context: ./judge
+    #   dockerfile: Dockerfile
+    # 我们直接使用预构建的基础镜像，跳过复杂的本地编译步骤
+    # 在生产环境中建议使用本地构建的镜像，但在开发环境如果网络有问题，
+    # 我们至少可以让 judge 服务先跑起来（虽然可能缺少某些语言环境）
+    image: criyle/go-judge:latest
     container_name: ai-club-oj-sandbox
     restart: unless-stopped
     privileged: true
