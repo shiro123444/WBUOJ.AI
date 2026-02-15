@@ -103,7 +103,7 @@ export class SubmissionService {
     const problem = await prisma.problems.findUnique({
       where: { id: problemId },
       include: {
-        testCases: {
+        test_cases: {
           orderBy: { order: 'asc' },
         },
       },
@@ -124,10 +124,10 @@ export class SubmissionService {
     }
 
     // 创建提交记录
-    const submission = await prisma.submission.create({
+    const submission = await prisma.submissions.create({
       data: {
-        problemId,
-        userId,
+        problem_id: problemId,
+        user_id: userId,
         code,
         language: languageToPrisma[language],
         status: 'PENDING',
@@ -135,10 +135,10 @@ export class SubmissionService {
     })
 
     // 更新用户提交计数
-    await prisma.user.update({
+    await prisma.users.update({
       where: { id: userId },
       data: {
-        submissionCount: { increment: 1 },
+        submission_count: { increment: 1 },
       },
     })
 
@@ -149,11 +149,11 @@ export class SubmissionService {
       problemNumber: problem.number,
       code,
       language,
-      timeLimit: problem.timeLimit,
-      memoryLimit: problem.memoryLimit,
-      testCases: problem.testCases.map((tc) => ({
+      timeLimit: problem.time_limit,
+      memoryLimit: problem.memory_limit,
+      testCases: problem.test_cases.map((tc) => ({
         input: tc.input,
-        expectedOutput: tc.expectedOutput,
+        expectedOutput: tc.expected_output,
       })),
       createdAt: new Date(),
     }
