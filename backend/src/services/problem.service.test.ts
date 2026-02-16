@@ -83,14 +83,14 @@ const problemInputArb: fc.Arbitrary<CreateProblemInput> = fc.record({
 describe('Problem Service - Property Based Tests', () => {
   beforeAll(async () => {
     // Create a test admin user for creating problems
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await prisma.users.findFirst({
       where: { username: 'test_admin_problem' }
     })
     
     if (existingUser) {
       testAdminId = existingUser.id
     } else {
-      const user = await prisma.user.create({
+      const user = await prisma.users.create({
         data: {
           username: 'test_admin_problem',
           email: 'test_admin_problem@test.com',
@@ -104,10 +104,10 @@ describe('Problem Service - Property Based Tests', () => {
 
   afterAll(async () => {
     // Clean up test data
-    await prisma.problem.deleteMany({
+    await prisma.problems.deleteMany({
       where: { createdById: testAdminId }
     })
-    await prisma.user.deleteMany({
+    await prisma.users.deleteMany({
       where: { username: 'test_admin_problem' }
     })
     await prisma.$disconnect()
@@ -115,7 +115,7 @@ describe('Problem Service - Property Based Tests', () => {
 
   beforeEach(async () => {
     // Clean up problems before each test
-    await prisma.problem.deleteMany({
+    await prisma.problems.deleteMany({
       where: { createdById: testAdminId }
     })
   })
@@ -353,14 +353,14 @@ describe('Problem Service - Property 3: Problem Filtering Tests', () => {
 
   beforeAll(async () => {
     // Create a test admin user
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await prisma.users.findFirst({
       where: { username: 'test_admin_filter' }
     })
     
     if (existingUser) {
       testAdminId = existingUser.id
     } else {
-      const user = await prisma.user.create({
+      const user = await prisma.users.create({
         data: {
           username: 'test_admin_filter',
           email: 'test_admin_filter@test.com',
@@ -376,12 +376,12 @@ describe('Problem Service - Property 3: Problem Filtering Tests', () => {
     // Clean up all created problems
     for (const id of createdProblemIds) {
       try {
-        await prisma.problem.delete({ where: { id } })
+        await prisma.problems.delete({ where: { id } })
       } catch {
         // Ignore if already deleted
       }
     }
-    await prisma.user.deleteMany({
+    await prisma.users.deleteMany({
       where: { username: 'test_admin_filter' }
     })
     await prisma.$disconnect()
@@ -391,7 +391,7 @@ describe('Problem Service - Property 3: Problem Filtering Tests', () => {
     // Clean up problems before each test
     for (const id of createdProblemIds) {
       try {
-        await prisma.problem.delete({ where: { id } })
+        await prisma.problems.delete({ where: { id } })
       } catch {
         // Ignore if already deleted
       }
@@ -715,14 +715,14 @@ describe('Problem Service - Property 4: Batch Import Consistency Tests', () => {
 
   beforeAll(async () => {
     // Create a test admin user
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await prisma.users.findFirst({
       where: { username: 'test_admin_batch_import' }
     })
     
     if (existingUser) {
       testAdminId = existingUser.id
     } else {
-      const user = await prisma.user.create({
+      const user = await prisma.users.create({
         data: {
           username: 'test_admin_batch_import',
           email: 'test_admin_batch_import@test.com',
@@ -738,12 +738,12 @@ describe('Problem Service - Property 4: Batch Import Consistency Tests', () => {
     // Clean up all created problems
     for (const id of createdProblemIds) {
       try {
-        await prisma.problem.delete({ where: { id } })
+        await prisma.problems.delete({ where: { id } })
       } catch {
         // Ignore if already deleted
       }
     }
-    await prisma.user.deleteMany({
+    await prisma.users.deleteMany({
       where: { username: 'test_admin_batch_import' }
     })
     await prisma.$disconnect()
@@ -753,7 +753,7 @@ describe('Problem Service - Property 4: Batch Import Consistency Tests', () => {
     // Clean up problems before each test
     for (const id of createdProblemIds) {
       try {
-        await prisma.problem.delete({ where: { id } })
+        await prisma.problems.delete({ where: { id } })
       } catch {
         // Ignore if already deleted
       }

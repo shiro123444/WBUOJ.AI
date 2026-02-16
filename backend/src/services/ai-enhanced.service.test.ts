@@ -32,14 +32,14 @@ let testUserId: string
 
 beforeAll(async () => {
   // Create test user
-  const existingUser = await prisma.user.findFirst({
+  const existingUser = await prisma.users.findFirst({
     where: { username: 'test_ai_enhanced_user' }
   })
   
   if (existingUser) {
     testUserId = existingUser.id
   } else {
-    const user = await prisma.user.create({
+    const user = await prisma.users.create({
       data: {
         username: 'test_ai_enhanced_user',
         email: 'test_ai_enhanced@test.com',
@@ -53,19 +53,19 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Clean up test data
-  await prisma.aIMessage.deleteMany({
+  await prisma.ai_messages.deleteMany({
     where: { conversation: { userId: testUserId } }
   })
-  await prisma.aIConversation.deleteMany({
+  await prisma.ai_conversations.deleteMany({
     where: { userId: testUserId }
   })
-  await prisma.aIUsageLog.deleteMany({
+  await prisma.ai_usage_logs.deleteMany({
     where: { userId: testUserId }
   })
-  await prisma.aIQuota.deleteMany({
+  await prisma.ai_quotas.deleteMany({
     where: { userId: testUserId }
   })
-  await prisma.user.deleteMany({
+  await prisma.users.deleteMany({
     where: { username: 'test_ai_enhanced_user' }
   })
   await prisma.$disconnect()
@@ -74,13 +74,13 @@ afterAll(async () => {
 describe('AI Service - Property 9: AI 对话连续性', () => {
   beforeEach(async () => {
     // Clean up conversations before each test
-    await prisma.aIMessage.deleteMany({
+    await prisma.ai_messages.deleteMany({
       where: { conversation: { userId: testUserId } }
     })
-    await prisma.aIConversation.deleteMany({
+    await prisma.ai_conversations.deleteMany({
       where: { userId: testUserId }
     })
-    await prisma.aIQuota.deleteMany({
+    await prisma.ai_quotas.deleteMany({
       where: { userId: testUserId }
     })
   })
@@ -96,7 +96,7 @@ describe('AI Service - Property 9: AI 对话连续性', () => {
     // The actual AI response is mocked in integration tests
     
     // Check no conversations exist
-    const initialConversations = await prisma.aIConversation.findMany({
+    const initialConversations = await prisma.ai_conversations.findMany({
       where: { userId: testUserId }
     })
     expect(initialConversations.length).toBe(0)
@@ -110,7 +110,7 @@ describe('AI Service - Property 9: AI 对话连续性', () => {
    */
   it('Property 9.2: Conversation messages are ordered', async () => {
     // Create a conversation with messages
-    const conversation = await prisma.aIConversation.create({
+    const conversation = await prisma.ai_conversations.create({
       data: {
         userId: testUserId,
         title: 'Test Conversation',
@@ -120,7 +120,7 @@ describe('AI Service - Property 9: AI 对话连续性', () => {
     // Create messages with different timestamps
     const messages = []
     for (let i = 0; i < 5; i++) {
-      const msg = await prisma.aIMessage.create({
+      const msg = await prisma.ai_messages.create({
         data: {
           conversationId: conversation.id,
           role: i % 2 === 0 ? 'USER' : 'ASSISTANT',
@@ -152,7 +152,7 @@ describe('AI Service - Property 9: AI 对话连续性', () => {
    */
   it('Property 9.3: Users can only access their own conversations', async () => {
     // Create a conversation for test user
-    const conversation = await prisma.aIConversation.create({
+    const conversation = await prisma.ai_conversations.create({
       data: {
         userId: testUserId,
         title: 'Test Conversation',
@@ -160,7 +160,7 @@ describe('AI Service - Property 9: AI 对话连续性', () => {
     })
 
     // Create another user
-    const otherUser = await prisma.user.create({
+    const otherUser = await prisma.users.create({
       data: {
         username: 'other_user_' + Date.now(),
         email: `other_${Date.now()}@test.com`,
@@ -176,7 +176,7 @@ describe('AI Service - Property 9: AI 对话连续性', () => {
       ).rejects.toThrow('Conversation not found')
     } finally {
       // Clean up other user
-      await prisma.user.delete({ where: { id: otherUser.id } })
+      await prisma.users.delete({ where: { id: otherUser.id } })
     }
   }, 30000)
 
@@ -190,7 +190,7 @@ describe('AI Service - Property 9: AI 对话连续性', () => {
     // Create multiple conversations
     const conversationCount = 15
     for (let i = 0; i < conversationCount; i++) {
-      await prisma.aIConversation.create({
+      await prisma.ai_conversations.create({
         data: {
           userId: testUserId,
           title: `Conversation ${i}`,
@@ -211,10 +211,10 @@ describe('AI Service - Property 9: AI 对话连续性', () => {
 
 describe('AI Service - Property 12: AI 速率限制', () => {
   beforeEach(async () => {
-    await prisma.aIQuota.deleteMany({
+    await prisma.ai_quotas.deleteMany({
       where: { userId: testUserId }
     })
-    await prisma.aIUsageLog.deleteMany({
+    await prisma.ai_usage_logs.deleteMany({
       where: { userId: testUserId }
     })
   })
@@ -253,7 +253,7 @@ describe('AI Service - Property 12: AI 速率限制', () => {
         fc.integer({ min: 1, max: 100 }),
         async (count) => {
           // Reset quota
-          await prisma.aIQuota.deleteMany({ where: { userId: testUserId } })
+          await prisma.ai_quotas.deleteMany({ where: { userId: testUserId } })
 
           // Log many inline completions
           for (let i = 0; i < count; i++) {
@@ -284,7 +284,7 @@ describe('AI Service - Property 12: AI 速率限制', () => {
         fc.constantFrom(...chatTypes),
         async (chatType) => {
           // Reset quota
-          await prisma.aIQuota.deleteMany({ where: { userId: testUserId } })
+          await prisma.ai_quotas.deleteMany({ where: { userId: testUserId } })
 
           // Consume quota
           const quota = await aiService.checkAndConsumeChatQuota(testUserId, chatType)

@@ -6,3 +6,4 @@ export { AnimatedLogo } from './AnimatedLogo';
 export { TypewriterTitle } from './TypewriterTitle';
 export { ProblemCard } from './ProblemCard';
 export { AIChatCard } from './AIChatCard';
+export { GlassCard, GlassMeshBackground, GlassPageWrapper } from './GlassCard';

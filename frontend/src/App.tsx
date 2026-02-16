@@ -17,6 +17,12 @@ import {
   NotFound,
   OAuthCallback,
   Submissions,
+  CheckIn,
+  AdminDashboard,
+  Discussions,
+  DiscussionDetail,
+  Announcements,
+  AnnouncementDetail,
 } from './pages'
 import { MathTest } from './pages/MathTest'
 import { SimpleTest } from './pages/SimpleTest'
@@ -50,11 +56,31 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="solutions/:id" element={<SolutionDetail />} />
+            <Route path="discussions" element={<Discussions />} />
+            <Route path="discussions/:id" element={<DiscussionDetail />} />
+            <Route path="announcements" element={<Announcements />} />
+            <Route path="announcements/:id" element={<AnnouncementDetail />} />
             <Route
               path="profile"
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="checkin"
+              element={
+                <ProtectedRoute>
+                  <CheckIn />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
                 </ProtectedRoute>
               }
             />

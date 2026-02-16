@@ -84,7 +84,7 @@ export class SolutionService {
    */
   async createSolution(input: CreateSolutionInput, userId: string) {
     // Check if problem exists
-    const problem = await prisma.problem.findUnique({
+    const problem = await prisma.problems.findUnique({
       where: { id: input.problemId },
       select: { id: true, number: true, title: true },
     })
@@ -100,7 +100,7 @@ export class SolutionService {
     }
 
     // Create solution
-    const solution = await prisma.solution.create({
+    const solution = await prisma.solutions.create({
       data: {
         problemId: input.problemId,
         authorId: userId,
@@ -110,7 +110,7 @@ export class SolutionService {
         language: input.language,
       },
       include: {
-        author: {
+        users: {
           select: { id: true, username: true, avatar: true },
         },
       },
@@ -120,8 +120,8 @@ export class SolutionService {
       id: solution.id,
       problemId: solution.problemId,
       title: solution.title,
-      authorId: solution.author.id,
-      authorName: solution.author.username,
+      authorId: solution.users.id,
+      authorName: solution.users.username,
       createdAt: solution.createdAt,
     }
   }
@@ -134,7 +134,7 @@ export class SolutionService {
     const skip = (page - 1) * limit
 
     // Check if problem exists
-    const problem = await prisma.problem.findUnique({
+    const problem = await prisma.problems.findUnique({
       where: { id: problemId },
       select: { id: true },
     })
@@ -155,13 +155,13 @@ export class SolutionService {
       : { createdAt: 'desc' as const }
 
     const [solutions, total] = await Promise.all([
-      prisma.solution.findMany({
+      prisma.solutions.findMany({
         where: { problemId },
         skip,
         take: limit,
         orderBy,
         include: {
-          author: {
+          users: {
             select: { id: true, username: true, avatar: true },
           },
           _count: {
@@ -169,15 +169,15 @@ export class SolutionService {
           },
         },
       }),
-      prisma.solution.count({ where: { problemId } }),
+      prisma.solutions.count({ where: { problemId } }),
     ])
 
     const solutionList: SolutionListItem[] = solutions.map((s) => ({
       id: s.id,
       title: s.title,
-      authorId: s.author.id,
-      authorName: s.author.username,
-      authorAvatar: s.author.avatar,
+      authorId: s.users.id,
+      authorName: s.users.username,
+      authorAvatar: s.users.avatar,
       likes: s.likes,
       views: s.views,
       commentCount: s._count.comments,
@@ -200,18 +200,18 @@ export class SolutionService {
    * Get solution detail with anti-spoiler logic
    */
   async getSolutionById(solutionId: string, userId?: string): Promise<SolutionDetail> {
-    const solution = await prisma.solution.findUnique({
+    const solution = await prisma.solutions.findUnique({
       where: { id: solutionId },
       include: {
-        problem: {
+        problems: {
           select: { id: true, number: true, title: true },
         },
-        author: {
+        users: {
           select: { id: true, username: true, avatar: true },
         },
         comments: {
           include: {
-            author: {
+            users: {
               select: { id: true, username: true, avatar: true },
             },
           },
@@ -231,7 +231,7 @@ export class SolutionService {
     }
 
     // Increment view count
-    await prisma.solution.update({
+    await prisma.solutions.update({
       where: { id: solutionId },
       data: { views: { increment: 1 } },
     })
@@ -239,7 +239,7 @@ export class SolutionService {
     // Check if user has liked the solution
     let isLiked = false
     if (userId) {
-      const like = await prisma.solutionLike.findUnique({
+      const like = await prisma.solution_likes.findUnique({
         where: {
           solutionId_userId: { solutionId, userId },
         },
@@ -250,7 +250,7 @@ export class SolutionService {
     // Check which comments user has liked
     const likedCommentIds = new Set<string>()
     if (userId) {
-      const commentLikes = await prisma.commentLike.findMany({
+      const commentLikes = await prisma.comment_likes.findMany({
         where: {
           commentId: { in: solution.comments.map((c) => c.id) },
           userId,
@@ -262,17 +262,17 @@ export class SolutionService {
 
     return {
       id: solution.id,
-      problemId: solution.problem.id,
-      problemNumber: solution.problem.number,
-      problemTitle: solution.problem.title,
+      problemId: solution.problems.id,
+      problemNumber: solution.problems.number,
+      problemTitle: solution.problems.title,
       title: solution.title,
       // Hide content if user hasn't solved the problem
       content: hasSolved ? solution.content : null,
       code: hasSolved ? solution.code : null,
       language: solution.language,
-      authorId: solution.author.id,
-      authorName: solution.author.username,
-      authorAvatar: solution.author.avatar,
+      authorId: solution.users.id,
+      authorName: solution.users.username,
+      authorAvatar: solution.users.avatar,
       likes: solution.likes,
       views: solution.views + 1, // Include current view
       isLiked,
@@ -281,9 +281,9 @@ export class SolutionService {
       isContentHidden: !hasSolved,
       comments: solution.comments.map((c) => ({
         id: c.id,
-        authorId: c.author.id,
-        authorName: c.author.username,
-        authorAvatar: c.author.avatar,
+        authorId: c.users.id,
+        authorName: c.users.username,
+        authorAvatar: c.users.avatar,
         content: c.content,
         likes: c.likes,
         isLiked: likedCommentIds.has(c.id),
@@ -296,7 +296,7 @@ export class SolutionService {
    * Update a solution (author only)
    */
   async updateSolution(solutionId: string, input: UpdateSolutionInput, userId: string) {
-    const solution = await prisma.solution.findUnique({
+    const solution = await prisma.solutions.findUnique({
       where: { id: solutionId },
       select: { authorId: true },
     })
@@ -309,7 +309,7 @@ export class SolutionService {
       throw new AppError(403, 'You can only edit your own solutions', 'AUTH_004')
     }
 
-    const updated = await prisma.solution.update({
+    const updated = await prisma.solutions.update({
       where: { id: solutionId },
       data: {
         title: input.title,
@@ -330,7 +330,7 @@ export class SolutionService {
    * Delete a solution (author or admin only)
    */
   async deleteSolution(solutionId: string, userId: string, isAdmin: boolean) {
-    const solution = await prisma.solution.findUnique({
+    const solution = await prisma.solutions.findUnique({
       where: { id: solutionId },
       select: { authorId: true },
     })
@@ -343,7 +343,7 @@ export class SolutionService {
       throw new AppError(403, 'You can only delete your own solutions', 'AUTH_004')
     }
 
-    await prisma.solution.delete({ where: { id: solutionId } })
+    await prisma.solutions.delete({ where: { id: solutionId } })
 
     return { success: true }
   }
@@ -352,7 +352,7 @@ export class SolutionService {
    * Like or unlike a solution
    */
   async toggleLike(solutionId: string, userId: string) {
-    const solution = await prisma.solution.findUnique({
+    const solution = await prisma.solutions.findUnique({
       where: { id: solutionId },
       select: { id: true, likes: true },
     })
@@ -362,7 +362,7 @@ export class SolutionService {
     }
 
     // Check if already liked
-    const existingLike = await prisma.solutionLike.findUnique({
+    const existingLike = await prisma.solution_likes.findUnique({
       where: {
         solutionId_userId: { solutionId, userId },
       },
@@ -371,10 +371,10 @@ export class SolutionService {
     if (existingLike) {
       // Unlike
       await prisma.$transaction([
-        prisma.solutionLike.delete({
+        prisma.solution_likes.delete({
           where: { id: existingLike.id },
         }),
-        prisma.solution.update({
+        prisma.solutions.update({
           where: { id: solutionId },
           data: { likes: { decrement: 1 } },
         }),
@@ -384,10 +384,10 @@ export class SolutionService {
     } else {
       // Like
       await prisma.$transaction([
-        prisma.solutionLike.create({
+        prisma.solution_likes.create({
           data: { solutionId, userId },
         }),
-        prisma.solution.update({
+        prisma.solutions.update({
           where: { id: solutionId },
           data: { likes: { increment: 1 } },
         }),
@@ -401,7 +401,7 @@ export class SolutionService {
    * Add a comment to a solution
    */
   async addComment(input: CreateCommentInput, userId: string) {
-    const solution = await prisma.solution.findUnique({
+    const solution = await prisma.solutions.findUnique({
       where: { id: input.solutionId },
       select: { id: true },
     })
@@ -410,14 +410,14 @@ export class SolutionService {
       throw new AppError(404, 'Solution not found', 'NOT_FOUND')
     }
 
-    const comment = await prisma.comment.create({
+    const comment = await prisma.comments.create({
       data: {
         solutionId: input.solutionId,
         authorId: userId,
         content: input.content,
       },
       include: {
-        author: {
+        users: {
           select: { id: true, username: true, avatar: true },
         },
       },
@@ -425,9 +425,9 @@ export class SolutionService {
 
     return {
       id: comment.id,
-      authorId: comment.author.id,
-      authorName: comment.author.username,
-      authorAvatar: comment.author.avatar,
+      authorId: comment.users.id,
+      authorName: comment.users.username,
+      authorAvatar: comment.users.avatar,
       content: comment.content,
       likes: comment.likes,
       isLiked: false,
@@ -439,7 +439,7 @@ export class SolutionService {
    * Delete a comment (author or admin only)
    */
   async deleteComment(commentId: string, userId: string, isAdmin: boolean) {
-    const comment = await prisma.comment.findUnique({
+    const comment = await prisma.comments.findUnique({
       where: { id: commentId },
       select: { authorId: true },
     })
@@ -452,7 +452,7 @@ export class SolutionService {
       throw new AppError(403, 'You can only delete your own comments', 'AUTH_004')
     }
 
-    await prisma.comment.delete({ where: { id: commentId } })
+    await prisma.comments.delete({ where: { id: commentId } })
 
     return { success: true }
   }
@@ -461,7 +461,7 @@ export class SolutionService {
    * Like or unlike a comment
    */
   async toggleCommentLike(commentId: string, userId: string) {
-    const comment = await prisma.comment.findUnique({
+    const comment = await prisma.comments.findUnique({
       where: { id: commentId },
       select: { id: true, likes: true },
     })
@@ -471,7 +471,7 @@ export class SolutionService {
     }
 
     // Check if already liked
-    const existingLike = await prisma.commentLike.findUnique({
+    const existingLike = await prisma.comment_likes.findUnique({
       where: {
         commentId_userId: { commentId, userId },
       },
@@ -480,10 +480,10 @@ export class SolutionService {
     if (existingLike) {
       // Unlike
       await prisma.$transaction([
-        prisma.commentLike.delete({
+        prisma.comment_likes.delete({
           where: { id: existingLike.id },
         }),
-        prisma.comment.update({
+        prisma.comments.update({
           where: { id: commentId },
           data: { likes: { decrement: 1 } },
         }),
@@ -493,10 +493,10 @@ export class SolutionService {
     } else {
       // Like
       await prisma.$transaction([
-        prisma.commentLike.create({
+        prisma.comment_likes.create({
           data: { commentId, userId },
         }),
-        prisma.comment.update({
+        prisma.comments.update({
           where: { id: commentId },
           data: { likes: { increment: 1 } },
         }),

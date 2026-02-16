@@ -39,14 +39,14 @@ const getTodayString = () => new Date().toISOString().split('T')[0]
 // Global setup and teardown
 beforeAll(async () => {
   // Create test user
-  const existingUser = await prisma.user.findFirst({
+  const existingUser = await prisma.users.findFirst({
     where: { username: 'test_ai_user' }
   })
   
   if (existingUser) {
     testUserId = existingUser.id
   } else {
-    const user = await prisma.user.create({
+    const user = await prisma.users.create({
       data: {
         username: 'test_ai_user',
         email: 'test_ai_user@test.com',
@@ -58,14 +58,14 @@ beforeAll(async () => {
   }
 
   // Create test admin
-  const existingAdmin = await prisma.user.findFirst({
+  const existingAdmin = await prisma.users.findFirst({
     where: { username: 'test_ai_admin' }
   })
   
   if (existingAdmin) {
     testAdminId = existingAdmin.id
   } else {
-    const admin = await prisma.user.create({
+    const admin = await prisma.users.create({
       data: {
         username: 'test_ai_admin',
         email: 'test_ai_admin@test.com',
@@ -79,16 +79,16 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Clean up test data
-  await prisma.aIUsageLog.deleteMany({
+  await prisma.ai_usage_logs.deleteMany({
     where: { userId: { in: [testUserId, testAdminId] } }
   })
-  await prisma.aIQuota.deleteMany({
+  await prisma.ai_quotas.deleteMany({
     where: { userId: { in: [testUserId, testAdminId] } }
   })
-  await prisma.systemConfig.deleteMany({
+  await prisma.system_configs.deleteMany({
     where: { key: { in: ['ai_daily_limit', 'ai_enabled'] } }
   })
-  await prisma.user.deleteMany({
+  await prisma.users.deleteMany({
     where: { username: { in: ['test_ai_user', 'test_ai_admin'] } }
   })
   await prisma.$disconnect()
@@ -97,14 +97,14 @@ afterAll(async () => {
 describe('AI Service - Property 9: AI Rate Limiting Tests', () => {
   beforeEach(async () => {
     // Clean up quota and usage logs before each test
-    await prisma.aIUsageLog.deleteMany({
+    await prisma.ai_usage_logs.deleteMany({
       where: { userId: testUserId }
     })
-    await prisma.aIQuota.deleteMany({
+    await prisma.ai_quotas.deleteMany({
       where: { userId: testUserId }
     })
     // Reset system config to default
-    await prisma.systemConfig.deleteMany({
+    await prisma.system_configs.deleteMany({
       where: { key: 'ai_daily_limit' }
     })
   })
@@ -132,7 +132,7 @@ describe('AI Service - Property 9: AI Rate Limiting Tests', () => {
   it('Property 9.2: Requests within limit should succeed', async () => {
     // Set a small limit for testing
     const testLimit = 5
-    await prisma.systemConfig.upsert({
+    await prisma.system_configs.upsert({
       where: { key: 'ai_daily_limit' },
       create: { key: 'ai_daily_limit', value: testLimit.toString() },
       update: { value: testLimit.toString() },
@@ -143,8 +143,8 @@ describe('AI Service - Property 9: AI Rate Limiting Tests', () => {
         fc.integer({ min: 1, max: testLimit }),
         async (numRequests) => {
           // Reset quota for this test
-          await prisma.aIQuota.deleteMany({ where: { userId: testUserId } })
-          await prisma.aIUsageLog.deleteMany({ where: { userId: testUserId } })
+          await prisma.ai_quotas.deleteMany({ where: { userId: testUserId } })
+          await prisma.ai_usage_logs.deleteMany({ where: { userId: testUserId } })
 
           // Make numRequests requests
           for (let i = 0; i < numRequests; i++) {
@@ -171,15 +171,15 @@ describe('AI Service - Property 9: AI Rate Limiting Tests', () => {
   it('Property 9.3: Requests beyond limit should be rejected', async () => {
     // Set a small limit for testing
     const testLimit = 3
-    await prisma.systemConfig.upsert({
+    await prisma.system_configs.upsert({
       where: { key: 'ai_daily_limit' },
       create: { key: 'ai_daily_limit', value: testLimit.toString() },
       update: { value: testLimit.toString() },
     })
 
     // Reset quota
-    await prisma.aIQuota.deleteMany({ where: { userId: testUserId } })
-    await prisma.aIUsageLog.deleteMany({ where: { userId: testUserId } })
+    await prisma.ai_quotas.deleteMany({ where: { userId: testUserId } })
+    await prisma.ai_usage_logs.deleteMany({ where: { userId: testUserId } })
 
     // Use up all quota
     for (let i = 0; i < testLimit; i++) {
@@ -210,8 +210,8 @@ describe('AI Service - Property 9: AI Rate Limiting Tests', () => {
         fc.constantFrom(...usageTypes),
         async (usageType) => {
           // Reset quota for this test
-          await prisma.aIQuota.deleteMany({ where: { userId: testUserId } })
-          await prisma.aIUsageLog.deleteMany({ where: { userId: testUserId } })
+          await prisma.ai_quotas.deleteMany({ where: { userId: testUserId } })
+          await prisma.ai_usage_logs.deleteMany({ where: { userId: testUserId } })
 
           // Make a request
           const quota = await aiService.checkAndConsumeQuota(testUserId, usageType)
@@ -220,7 +220,7 @@ describe('AI Service - Property 9: AI Rate Limiting Tests', () => {
           expect(quota.chatUsed).toBe(1)
 
           // Usage log should be created
-          const logs = await prisma.aIUsageLog.findMany({
+          const logs = await prisma.ai_usage_logs.findMany({
             where: { userId: testUserId, type: usageType }
           })
           expect(logs.length).toBe(1)
@@ -238,15 +238,15 @@ describe('AI Service - Property 9: AI Rate Limiting Tests', () => {
    */
   it('Property 9.5: Quota used should never exceed limit', async () => {
     const testLimit = 5
-    await prisma.systemConfig.upsert({
+    await prisma.system_configs.upsert({
       where: { key: 'ai_daily_limit' },
       create: { key: 'ai_daily_limit', value: testLimit.toString() },
       update: { value: testLimit.toString() },
     })
 
     // Reset quota
-    await prisma.aIQuota.deleteMany({ where: { userId: testUserId } })
-    await prisma.aIUsageLog.deleteMany({ where: { userId: testUserId } })
+    await prisma.ai_quotas.deleteMany({ where: { userId: testUserId } })
+    await prisma.ai_usage_logs.deleteMany({ where: { userId: testUserId } })
 
     // Try to make more requests than the limit
     const attemptCount = testLimit + 5
@@ -276,13 +276,13 @@ describe('AI Service - Property 9: AI Rate Limiting Tests', () => {
 describe('AI Service - Property 10: AI Configuration Tests', () => {
   beforeEach(async () => {
     // Clean up quota and config before each test
-    await prisma.aIUsageLog.deleteMany({
+    await prisma.ai_usage_logs.deleteMany({
       where: { userId: testUserId }
     })
-    await prisma.aIQuota.deleteMany({
+    await prisma.ai_quotas.deleteMany({
       where: { userId: testUserId }
     })
-    await prisma.systemConfig.deleteMany({
+    await prisma.system_configs.deleteMany({
       where: { key: { in: ['ai_daily_limit', 'ai_enabled'] } }
     })
   })
@@ -303,7 +303,7 @@ describe('AI Service - Property 10: AI Configuration Tests', () => {
           expect(config.dailyLimit).toBe(newLimit)
 
           // Reset user quota to pick up new limit
-          await prisma.aIQuota.deleteMany({ where: { userId: testUserId } })
+          await prisma.ai_quotas.deleteMany({ where: { userId: testUserId } })
 
           // New quota should reflect new limit
           const quota = await aiService.getQuota(testUserId)
@@ -404,7 +404,7 @@ describe('AI Service - Property 10: AI Configuration Tests', () => {
     await aiAdminService.updateConfig({ dailyLimit: initialLimit })
 
     // Reset quota
-    await prisma.aIQuota.deleteMany({ where: { userId: testUserId } })
+    await prisma.ai_quotas.deleteMany({ where: { userId: testUserId } })
 
     // Use some quota
     const usedCount = 5
@@ -446,7 +446,7 @@ describe('AI Service - Property 10: AI Configuration Tests', () => {
           await aiAdminService.updateConfig({ dailyLimit: globalLimit })
 
           // Reset user quota
-          await prisma.aIQuota.deleteMany({ where: { userId: testUserId } })
+          await prisma.ai_quotas.deleteMany({ where: { userId: testUserId } })
 
           // Set custom user limit
           await aiAdminService.setUserQuotaLimit(testUserId, userLimit)
@@ -471,7 +471,7 @@ describe('AI Service - Property 10: AI Configuration Tests', () => {
     await aiAdminService.updateConfig({ dailyLimit: 10 })
 
     // Reset quota
-    await prisma.aIQuota.deleteMany({ where: { userId: testUserId } })
+    await prisma.ai_quotas.deleteMany({ where: { userId: testUserId } })
 
     // Use some quota
     for (let i = 0; i < 5; i++) {

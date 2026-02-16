@@ -65,14 +65,14 @@ const languageArb = fc.option(
 // Global setup and teardown
 beforeAll(async () => {
   // Create test admin user
-  const existingAdmin = await prisma.user.findFirst({
+  const existingAdmin = await prisma.users.findFirst({
     where: { username: 'test_admin_solution' }
   })
   
   if (existingAdmin) {
     testAdminId = existingAdmin.id
   } else {
-    const admin = await prisma.user.create({
+    const admin = await prisma.users.create({
       data: {
         username: 'test_admin_solution',
         email: 'test_admin_solution@test.com',
@@ -84,14 +84,14 @@ beforeAll(async () => {
   }
 
   // Create test user who has solved the problem
-  const existingSolvedUser = await prisma.user.findFirst({
+  const existingSolvedUser = await prisma.users.findFirst({
     where: { username: 'test_solved_user' }
   })
   
   if (existingSolvedUser) {
     testSolvedUserId = existingSolvedUser.id
   } else {
-    const solvedUser = await prisma.user.create({
+    const solvedUser = await prisma.users.create({
       data: {
         username: 'test_solved_user',
         email: 'test_solved_user@test.com',
@@ -103,14 +103,14 @@ beforeAll(async () => {
   }
 
   // Create test user who hasn't solved the problem
-  const existingUnsolvedUser = await prisma.user.findFirst({
+  const existingUnsolvedUser = await prisma.users.findFirst({
     where: { username: 'test_unsolved_user' }
   })
   
   if (existingUnsolvedUser) {
     testUnsolvedUserId = existingUnsolvedUser.id
   } else {
-    const unsolvedUser = await prisma.user.create({
+    const unsolvedUser = await prisma.users.create({
       data: {
         username: 'test_unsolved_user',
         email: 'test_unsolved_user@test.com',
@@ -138,7 +138,7 @@ beforeAll(async () => {
   testProblemId = problem.id
 
   // Create an ACCEPTED submission for the solved user
-  await prisma.submission.create({
+  await prisma.submissions.create({
     data: {
       problemId: testProblemId,
       userId: testSolvedUserId,
@@ -153,25 +153,25 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Clean up test data in correct order (respect foreign keys)
-  await prisma.commentLike.deleteMany({
+  await prisma.comment_likes.deleteMany({
     where: { comment: { solution: { problemId: testProblemId } } }
   })
-  await prisma.comment.deleteMany({
+  await prisma.comments.deleteMany({
     where: { solution: { problemId: testProblemId } }
   })
-  await prisma.solutionLike.deleteMany({
+  await prisma.solution_likes.deleteMany({
     where: { solution: { problemId: testProblemId } }
   })
-  await prisma.solution.deleteMany({
+  await prisma.solutions.deleteMany({
     where: { problemId: testProblemId }
   })
-  await prisma.submission.deleteMany({
+  await prisma.submissions.deleteMany({
     where: { problemId: testProblemId }
   })
-  await prisma.problem.deleteMany({
+  await prisma.problems.deleteMany({
     where: { id: testProblemId }
   })
-  await prisma.user.deleteMany({
+  await prisma.users.deleteMany({
     where: { 
       username: { 
         in: ['test_admin_solution', 'test_solved_user', 'test_unsolved_user'] 
@@ -184,16 +184,16 @@ afterAll(async () => {
 describe('Solution Service - Property 6: Solution Publishing Permission Tests', () => {
   beforeEach(async () => {
     // Clean up solutions before each test
-    await prisma.commentLike.deleteMany({
+    await prisma.comment_likes.deleteMany({
       where: { comment: { solution: { problemId: testProblemId } } }
     })
-    await prisma.comment.deleteMany({
+    await prisma.comments.deleteMany({
       where: { solution: { problemId: testProblemId } }
     })
-    await prisma.solutionLike.deleteMany({
+    await prisma.solution_likes.deleteMany({
       where: { solution: { problemId: testProblemId } }
     })
-    await prisma.solution.deleteMany({
+    await prisma.solutions.deleteMany({
       where: { problemId: testProblemId }
     })
   })
@@ -227,7 +227,7 @@ describe('Solution Service - Property 6: Solution Publishing Permission Tests', 
           expect(result.authorId).toBe(testSolvedUserId)
 
           // Clean up for next iteration
-          await prisma.solution.delete({ where: { id: result.id } })
+          await prisma.solutions.delete({ where: { id: result.id } })
         }
       ),
       { numRuns: 20 }
@@ -299,7 +299,7 @@ describe('Solution Service - Property 7: Solution Sorting Tests', () => {
     // Clean up solutions before each test
     for (const id of createdSolutionIds) {
       try {
-        await prisma.solution.delete({ where: { id } })
+        await prisma.solutions.delete({ where: { id } })
       } catch {
         // Ignore if already deleted
       }
@@ -311,7 +311,7 @@ describe('Solution Service - Property 7: Solution Sorting Tests', () => {
     // Clean up created solutions
     for (const id of createdSolutionIds) {
       try {
-        await prisma.solution.delete({ where: { id } })
+        await prisma.solutions.delete({ where: { id } })
       } catch {
         // Ignore if already deleted
       }
@@ -333,7 +333,7 @@ describe('Solution Service - Property 7: Solution Sorting Tests', () => {
           // Create solutions with different like counts
           const solutions = await Promise.all(
             likeCounts.map(async (likes, i) => {
-              const solution = await prisma.solution.create({
+              const solution = await prisma.solutions.create({
                 data: {
                   problemId: testProblemId,
                   authorId: testSolvedUserId,
@@ -366,7 +366,7 @@ describe('Solution Service - Property 7: Solution Sorting Tests', () => {
           // Clean up for next iteration
           for (const solution of solutions) {
             try {
-              await prisma.solution.delete({ where: { id: solution.id } })
+              await prisma.solutions.delete({ where: { id: solution.id } })
             } catch {
               // Ignore
             }
@@ -389,7 +389,7 @@ describe('Solution Service - Property 7: Solution Sorting Tests', () => {
     const solutions: Array<{ id: string; createdAt: Date }> = []
     
     for (let i = 0; i < 5; i++) {
-      const solution = await prisma.solution.create({
+      const solution = await prisma.solutions.create({
         data: {
           problemId: testProblemId,
           authorId: testSolvedUserId,
@@ -430,7 +430,7 @@ describe('Solution Service - Property 8: Anti-Spoiler Tests', () => {
 
   beforeAll(async () => {
     // Create a test solution for anti-spoiler tests
-    const solution = await prisma.solution.create({
+    const solution = await prisma.solutions.create({
       data: {
         problemId: testProblemId,
         authorId: testSolvedUserId,
@@ -446,7 +446,7 @@ describe('Solution Service - Property 8: Anti-Spoiler Tests', () => {
   afterAll(async () => {
     // Clean up test solution
     try {
-      await prisma.solution.delete({ where: { id: testSolutionId } })
+      await prisma.solutions.delete({ where: { id: testSolutionId } })
     } catch {
       // Ignore if already deleted
     }

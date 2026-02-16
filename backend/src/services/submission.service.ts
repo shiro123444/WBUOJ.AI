@@ -168,24 +168,24 @@ export class SubmissionService {
    * 获取提交详情
    */
   async getSubmission(submissionId: string, userId?: string): Promise<SubmissionDetail> {
-    const submission = await prisma.submission.findUnique({
+    const submission = await prisma.submissions.findUnique({
       where: { id: submissionId },
       include: {
-        problem: {
+        problems: {
           select: {
             id: true,
             number: true,
             title: true,
           },
         },
-        user: {
+        users: {
           select: {
             id: true,
             username: true,
           },
         },
-        testCaseResults: {
-          orderBy: { testCaseNum: 'asc' },
+        test_case_results: {
+          orderBy: { test_case_num: 'asc' },
         },
       },
     })
@@ -196,25 +196,25 @@ export class SubmissionService {
 
     // 只有提交者本人或管理员可以查看代码
     // 这里简化处理，允许查看自己的提交
-    const canViewCode = !userId || submission.userId === userId
+    const canViewCode = !userId || submission.user_id === userId
 
     return {
       id: submission.id,
-      problemId: submission.problem.id,
-      problemNumber: submission.problem.number,
-      problemTitle: submission.problem.title,
-      userId: submission.user.id,
-      username: submission.user.username,
+      problemId: submission.problems.id,
+      problemNumber: submission.problems.number,
+      problemTitle: submission.problems.title,
+      userId: submission.users.id,
+      username: submission.users.username,
       code: canViewCode ? submission.code : '[Hidden]',
       language: prismaToLanguage[submission.language] || 'cpp',
       status: submission.status.toLowerCase(),
       time: submission.time,
       memory: submission.memory,
-      compileError: submission.compileError,
-      runtimeError: submission.runtimeError,
-      createdAt: submission.createdAt,
-      testCaseResults: submission.testCaseResults.map((tc) => ({
-        testCaseNum: tc.testCaseNum,
+      compileError: submission.compile_error,
+      runtimeError: submission.runtime_error,
+      createdAt: submission.created_at,
+      testCaseResults: submission.test_case_results.map((tc) => ({
+        testCaseNum: tc.test_case_num,
         passed: tc.passed,
         time: tc.time,
         memory: tc.memory,
@@ -235,55 +235,55 @@ export class SubmissionService {
     const { userId, problemId, status, page = 1, limit = 20 } = query
 
     const where: {
-      userId?: string
-      problemId?: string
+      user_id?: string
+      problem_id?: string
       status?: 'PENDING' | 'JUDGING' | 'ACCEPTED' | 'WRONG_ANSWER' | 'TIME_LIMIT_EXCEEDED' | 'MEMORY_LIMIT_EXCEEDED' | 'RUNTIME_ERROR' | 'COMPILE_ERROR'
     } = {}
 
-    if (userId) where.userId = userId
-    if (problemId) where.problemId = problemId
+    if (userId) where.user_id = userId
+    if (problemId) where.problem_id = problemId
     if (status) {
       where.status = status.toUpperCase() as typeof where.status
     }
 
     const [submissions, total] = await Promise.all([
-      prisma.submission.findMany({
+      prisma.submissions.findMany({
         where,
         include: {
-          problem: {
+          problems: {
             select: {
               id: true,
               number: true,
               title: true,
             },
           },
-          user: {
+          users: {
             select: {
               id: true,
               username: true,
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      prisma.submission.count({ where }),
+      prisma.submissions.count({ where }),
     ])
 
     return {
       submissions: submissions.map((s) => ({
         id: s.id,
-        problemId: s.problem.id,
-        problemNumber: s.problem.number,
-        problemTitle: s.problem.title,
-        userId: s.user.id,
-        username: s.user.username,
+        problemId: s.problems.id,
+        problemNumber: s.problems.number,
+        problemTitle: s.problems.title,
+        userId: s.users.id,
+        username: s.users.username,
         language: prismaToLanguage[s.language] || 'cpp',
         status: s.status.toLowerCase(),
         time: s.time,
         memory: s.memory,
-        createdAt: s.createdAt,
+        createdAt: s.created_at,
       })),
       total,
       page,
@@ -296,21 +296,21 @@ export class SubmissionService {
    * 获取用户在某题目的最佳提交
    */
   async getBestSubmission(userId: string, problemId: string): Promise<SubmissionListItem | null> {
-    const submission = await prisma.submission.findFirst({
+    const submission = await prisma.submissions.findFirst({
       where: {
-        userId,
-        problemId,
+        user_id: userId,
+        problem_id: problemId,
         status: 'ACCEPTED',
       },
       include: {
-        problem: {
+        problems: {
           select: {
             id: true,
             number: true,
             title: true,
           },
         },
-        user: {
+        users: {
           select: {
             id: true,
             username: true,
@@ -327,16 +327,16 @@ export class SubmissionService {
 
     return {
       id: submission.id,
-      problemId: submission.problem.id,
-      problemNumber: submission.problem.number,
-      problemTitle: submission.problem.title,
-      userId: submission.user.id,
-      username: submission.user.username,
+      problemId: submission.problems.id,
+      problemNumber: submission.problems.number,
+      problemTitle: submission.problems.title,
+      userId: submission.users.id,
+      username: submission.users.username,
       language: prismaToLanguage[submission.language] || 'cpp',
       status: submission.status.toLowerCase(),
       time: submission.time,
       memory: submission.memory,
-      createdAt: submission.createdAt,
+      createdAt: submission.created_at,
     }
   }
 
@@ -344,10 +344,10 @@ export class SubmissionService {
    * 检查用户是否已通过某题目
    */
   async hasUserSolvedProblem(userId: string, problemId: string): Promise<boolean> {
-    const count = await prisma.submission.count({
+    const count = await prisma.submissions.count({
       where: {
-        userId,
-        problemId,
+        user_id: userId,
+        problem_id: problemId,
         status: 'ACCEPTED',
       },
     })

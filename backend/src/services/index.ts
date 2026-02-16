@@ -28,3 +28,11 @@ export type {
   SolutionDetail,
   CommentItem,
 } from './solution.service.js'
+export { leaderboardService, LeaderboardService } from './leaderboard.service.js'
+export { userService, UserService } from './user.service.js'
+export { contestService, ContestService } from './contest.service.js'
+export { checkInService, CheckInService } from './checkin.service.js'
+export { badgeService, BadgeService } from './badge.service.js'
+export { adminService, AdminService } from './admin.service.js'
+export { discussionService, DiscussionService } from './discussion.service.js'
+export { announcementService, AnnouncementService } from './announcement.service.js'

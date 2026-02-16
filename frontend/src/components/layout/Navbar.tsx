@@ -31,6 +31,8 @@ const navLinks = [
   { to: '/contests', label: '比赛' },
   { to: '/leaderboard', label: '排行榜' },
   { to: '/solutions', label: '题解' },
+  { to: '/announcements', label: '公告' },
+  { to: '/checkin', label: '签到' },
 ]
 
 export function Navbar() {
